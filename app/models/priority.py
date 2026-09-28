@@ -11,7 +11,8 @@ class Priority(Base):
 
     name: Mapped[str] = mapped_column(
         String(50),
-        nullable=False
+        nullable=False,
+        unique=True
     )
 
     sla_hours: Mapped[int] = mapped_column(

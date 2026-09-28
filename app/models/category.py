@@ -11,7 +11,8 @@ class Category(Base):
 
     name: Mapped[str] = mapped_column(
         String(100),
-        nullable=False
+        nullable=False,
+        unique=True
     )
 
     description: Mapped[str | None] = mapped_column(
