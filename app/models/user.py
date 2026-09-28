@@ -13,7 +13,7 @@ class User(Base):
 
     full_name: Mapped[str] = mapped_column(String(150), nullable=False)
 
-    email: Mapped[str] = mapped_column(String(150), nullable=False)
+    email: Mapped[str] = mapped_column(String(150), nullable=False, unique=True)
 
     password_hash: Mapped[str] = mapped_column(String(255), nullable=False)
 
@@ -24,7 +24,8 @@ class User(Base):
 
     telegram_chat_id: Mapped[str | None] = mapped_column(
         String(50),
-        nullable=True
+        nullable=True,
+        unique=True
     )
 
     department: Mapped[str | None] = mapped_column(

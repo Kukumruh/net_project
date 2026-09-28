@@ -13,7 +13,8 @@ class SystemSetting(Base):
 
     param_key: Mapped[str] = mapped_column(
         String(100),
-        nullable=False
+        nullable=False,
+        unique=True
     )
 
     param_value: Mapped[str] = mapped_column(

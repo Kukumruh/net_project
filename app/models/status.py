@@ -11,7 +11,8 @@ class Status(Base):
 
     name: Mapped[str] = mapped_column(
         String(50),
-        nullable=False
+        nullable=False,
+        unique=True
     )
 
     sort_order: Mapped[int] = mapped_column(
