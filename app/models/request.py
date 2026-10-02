@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, UTC
 from decimal import Decimal
 
 from sqlalchemy import (
@@ -9,7 +9,6 @@ from sqlalchemy import (
     Text,
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-
 from app.database import Base
 
 
@@ -53,6 +52,7 @@ class Request(Base):
         nullable=False
     )
 
+    # Уверенность модели в классификации
     ai_confidence: Mapped[Decimal | None] = mapped_column(
         Numeric(4, 3),
         nullable=True
@@ -61,14 +61,14 @@ class Request(Base):
     created_at: Mapped[datetime] = mapped_column(
         DateTime,
         nullable=False,
-        default=datetime.utcnow
+        default=lambda: datetime.now(UTC)
     )
 
     updated_at: Mapped[datetime] = mapped_column(
         DateTime,
         nullable=False,
-        default=datetime.utcnow,
-        onupdate=datetime.utcnow
+        default=lambda: datetime.now(UTC),
+        onupdate=lambda: datetime.now(UTC)
     )
 
     deadline_at: Mapped[datetime | None] = mapped_column(
