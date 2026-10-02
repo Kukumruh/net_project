@@ -15,6 +15,8 @@ class Priority(Base):
         unique=True
     )
 
+    # Service Level Agreement hours (нормативное время (в часах)
+    # , за которое команда поддержки или исполнитель обязаны решить задачу с данным приоритетом)
     sla_hours: Mapped[int] = mapped_column(
         nullable=False
     )

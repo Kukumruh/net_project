@@ -3,11 +3,13 @@ services:
     image: postgres:15
     container_name: student_requests_postgres
 
+    # переменные, которые официальный образ postgres понимает при первом запуске
     environment:
       POSTGRES_DB: ${POSTGRES_DB}
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
 
+    # <хост>:<контейнер>. Левая часть — порт машины, правая — порт внутри контейнера
     ports:
       - "5432:5432"
 
