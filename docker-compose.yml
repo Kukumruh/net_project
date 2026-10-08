@@ -11,7 +11,7 @@ services:
 
     # <хост>:<контейнер>. Левая часть — порт машины, правая — порт внутри контейнера
     ports:
-      - "5432:5432"
+      - "5433:5432"
 
     volumes:
       - student_requests_data:/var/lib/postgresql/data
