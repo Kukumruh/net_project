@@ -8,6 +8,9 @@ from decimal import Decimal
 
 from sqlalchemy import select
 
+import os
+from app.security import hash_password
+
 from app.database import SessionLocal
 from app.models import (
     User,
@@ -28,7 +31,7 @@ from app.models import (
 )
 
 # Настройки
-NOW = default=lambda: datetime.now(UTC)
+NOW = datetime.now(UTC).replace(tzinfo=None)
 
 # Роли
 ROLES = [
@@ -649,6 +652,8 @@ def get_status(db, name):
 
 # Основной seed
 def seed():
+    if len(os.getenv("DEMO_PASSWORD", "")) < 12:
+        raise RuntimeError("Для demo seed задайте DEMO_PASSWORD (минимум 12 символов)")
     db = SessionLocal()
 
     try:
@@ -730,7 +735,7 @@ def seed():
                 user = User(
                     full_name=data["full_name"],
                     email=data["email"],
-                    password_hash=data["password_hash"],
+                    password_hash=hash_password(os.environ["DEMO_PASSWORD"]),
                     role_id=roles[data["role"]].id,
                     telegram_chat_id=data["telegram_chat_id"],
                     department=data["department"],
@@ -740,6 +745,11 @@ def seed():
 
                 db.add(user)
                 db.flush()
+
+            elif user.password_hash == data["password_hash"]:
+                # Upgrade only the exact legacy placeholder of this demo account.
+                # Never reset an existing real password when rerunning the seed.
+                user.password_hash = hash_password(os.environ["DEMO_PASSWORD"])
 
             users[data["email"]] = user
 
