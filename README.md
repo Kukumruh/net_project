@@ -170,6 +170,37 @@ git --version
 
 ## Установка
 
+### Запуск всего проекта через Docker
+
+При настроенном `.env` достаточно выполнить:
+
+```powershell
+docker-compose up
+```
+
+Также поддерживается `docker compose up`. Compose собирает API, запускает PostgreSQL,
+дожидается готовности БД, применяет миграции Alembic и запускает Uvicorn.
+Swagger доступен по адресу http://localhost:8000/docs (путь `/docx` отсутствует).
+Локальный Python для этого способа запуска не требуется.
+
+При первом запуске скопируйте `.env.example` в `.env`, задайте `POSTGRES_PASSWORD`
+и случайный `SECRET_KEY` длиной не менее 32 символов. Уже настроенный `.env` сохраняйте.
+`DATABASE_URL` используется только при локальном запуске Python; контейнер подключается
+к `postgres:5432` с параметрами `POSTGRES_*`.
+
+```powershell
+docker compose up -d          # запуск в фоне
+docker compose logs -f api    # логи API и миграций
+docker compose up -d --build  # пересборка после изменения кода
+docker compose down          # остановка с сохранением данных
+```
+
+Том `student_requests_data` создаётся автоматически; существующий том используется повторно.
+Не используйте `down -v`, если данные нужно сохранить. Демонстрационные данные
+автоматически не загружаются.
+
+Следующие разделы описывают альтернативный запуск Python на хосте.
+
 ### 1. Клонирование репозитория
 
 ```powershell
@@ -211,13 +242,13 @@ pip install -r requirements.txt
 
 PostgreSQL запускается в Docker.
 
-Для хранения данных используется внешний Docker Volume:
+Для хранения данных используется именованный Docker Volume:
 
 ```text
 student_requests_data
 ```
 
-Создание Volume:
+Compose создаёт том автоматически. Ручное создание необязательно:
 
 ```powershell
 docker volume create student_requests_data
@@ -226,7 +257,7 @@ docker volume create student_requests_data
 Запуск PostgreSQL:
 
 ```powershell
-docker compose up -d
+docker compose up -d postgres
 ```
 
 Проверка запущенных контейнеров:
@@ -254,7 +285,7 @@ POSTGRES_DB=student_requests
 POSTGRES_USER=postgres
 POSTGRES_PASSWORD=your_password
 
-DATABASE_URL=postgresql+psycopg://postgres:your_password@localhost:5432/student_requests
+DATABASE_URL=postgresql+psycopg://postgres:your_password@localhost:5433/student_requests
 ```
 
 Значения `POSTGRES_PASSWORD` и другие секретные данные необходимо заменить на собственные.
@@ -265,7 +296,7 @@ DATABASE_URL=postgresql+psycopg://postgres:your_password@localhost:5432/student_
 
 ## Миграции базы данных
 
-После запуска PostgreSQL необходимо применить миграции:
+При локальном запуске Python после запуска PostgreSQL примените миграции (в Docker это происходит автоматически):
 
 ```powershell
 .\.venv\Scripts\alembic.exe upgrade head

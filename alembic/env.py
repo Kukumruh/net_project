@@ -17,7 +17,7 @@ if not database_url:
     raise RuntimeError("DATABASE_URL не найден в .env")
 
 config = context.config
-config.set_main_option("sqlalchemy.url", database_url)
+config.set_main_option("sqlalchemy.url", database_url.replace("%", "%%"))
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
