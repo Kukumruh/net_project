@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 
 from app.api.dependencies import current_user
 from app.database import get_db
-from app.models import Category, RequestComment, User
+from app.models import Category, RequestComment, Status, User
 from app.schemas.request import (
     CategoryOut,
     RequestCreate,
@@ -99,3 +99,22 @@ def comments(
             RequestComment.request_id == item.id, RequestComment.is_internal.is_(False)
         ).order_by(RequestComment.created_at.asc(), RequestComment.id.asc())
     ).all()
+
+
+@router.get("/statuses")
+def statuses(db: Session = Depends(get_db), user: User = Depends(current_user)):
+    """Return status dictionary and repair missing workflow values for legacy databases."""
+    configured = {item.name: item for item in db.scalars(select(Status)).all()}
+    required = [("Новая", 1), ("Назначена", 2), ("В работе", 3), ("На проверке", 4), ("Готово", 5), ("Отложена", 6), ("Решена", 7), ("Отклонена", 8), ("Закрыта", 9)]
+    changed = False
+    for name, order in required:
+        if name not in configured:
+            item = Status(name=name, sort_order=order)
+            db.add(item)
+            configured[name] = item
+            changed = True
+    if changed:
+        db.commit()
+        for item in configured.values():
+            db.refresh(item)
+    return [{"id": item.id, "name": item.name, "sort_order": item.sort_order} for item in sorted(configured.values(), key=lambda row: (row.sort_order, row.name))]
