@@ -83,8 +83,12 @@ def workflow_update(
 ):
     if user.role.name not in {"Оператор", "Администратор"}:
         raise HTTPException(403, "Изменять статус могут только оператор и администратор")
-    if payload.status not in {"Готово", "Отложена", "В работе", "Назначена", "На проверке"}:
-        raise HTTPException(422, "Недопустимый статус обработки")
+    # Validate against the live dictionary, not a duplicated hard-coded list.
+    # This keeps legacy labels (for example "Решена" or "Закрыта") usable when
+    # they are present in the database, while preventing arbitrary status values.
+    status_exists = db.scalar(select(Status.id).where(Status.name == payload.status))
+    if payload.status == "Новая" or status_exists is None:
+        raise HTTPException(422, "Недопустимый статус обработки. Выберите статус из справочника.")
     return RequestService(db).workflow_update(request_id, user, payload.status, payload.explanation)
 
 
