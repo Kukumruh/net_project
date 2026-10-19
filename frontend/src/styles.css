@@ -281,3 +281,6 @@ select:-webkit-autofill {
   .daily-chart-column > span { font-size: 8px; }
 }
 
+
+/* Administrator user management */
+.user-admin-grid{display:grid;grid-template-columns:minmax(280px,.8fr) minmax(0,1.4fr);gap:18px;align-items:start}.user-create-form{display:flex;flex-direction:column;gap:15px}.user-create-form label{display:flex;flex-direction:column;gap:7px;font-size:13px;font-weight:600}.user-create-form input,.user-create-form select{width:100%;min-width:0}.user-create-form .primary{align-self:flex-start;margin-top:4px}.user-admin-grid .requests-head{padding-bottom:16px}@media(max-width:900px){.user-admin-grid{grid-template-columns:1fr}}
