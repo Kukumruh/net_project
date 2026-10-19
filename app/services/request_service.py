@@ -3,7 +3,7 @@ from datetime import UTC, datetime, timedelta
 from fastapi import HTTPException
 from sqlalchemy import select
 
-from app.models import AuditLog, Category, Priority, Request, Status
+from app.models import AuditLog, Category, Priority, Request, Status, RequestComment
 from app.repositories.request_repository import RequestRepository
 from app.schemas.request import RequestOut
 
@@ -35,14 +35,60 @@ class RequestService:
             raise HTTPException(404, "Заявка не найдена")
         return item
 
+    @staticmethod
+    def classify_priority(title, description):
+        """Rule-based triage: impact/urgency phrases map to configured SLA tiers."""
+        text = f"{title} {description}".casefold()
+        critical = ("авар", "пожар", "угроз", "утечк", "массовый сбой",
+                    "полностью недоступ", "вся система не работает", "опасн")
+        high = ("срочно", "не работает", "невозможно войти", "заблокирован",
+                "не могу войти", "сбой", "не открывается", "не запускается",
+                "потерял доступ", "нет доступа")
+        low = ("консультац", "предложение", "уточнить", "небольшое улучшение", "вопрос по")
+        if any(word in text for word in critical):
+            return "Высокая"
+        if any(word in text for word in high):
+            return "Высокая"
+        if any(word in text for word in low):
+            return "Низкая"
+        return "Средняя"
+
+    def get_any(self, request_id, lock=False):
+        item = self.repo.get_any(request_id, lock)
+        if item is None:
+            raise HTTPException(404, "Заявка не найдена")
+        return item
+
+    def workflow_update(self, request_id, user, status_name, explanation):
+        item = self.get_any(request_id, lock=True)
+        status = self.db.scalar(select(Status).where(Status.name == status_name))
+        if status is None:
+            raise HTTPException(503, "Статус не настроен. Обновите справочники.")
+        now = datetime.now(UTC).replace(tzinfo=None)
+        item.status_id = status.id
+        item.updated_at = now
+        self.db.add(RequestComment(
+            request_id=item.id, author_id=user.id,
+            comment_text=explanation.strip(), is_internal=False, created_at=now,
+        ))
+        self.db.add(AuditLog(
+            user_id=user.id, action=f"request.status.{status_name}",
+            entity_type="request", entity_id=item.id,
+        ))
+        self.db.commit()
+        return self.serialize(self.get_any(item.id))
+
     def create(self, payload, user_id):
         category = self.db.get(Category, payload.category_id)
         if category is None:
             raise HTTPException(422, "Категория не существует")
         status = self.db.scalar(select(Status).where(Status.name == "Новая"))
-        priority = self.db.scalar(select(Priority).where(Priority.name == "Средняя"))
+        priority_name = self.classify_priority(payload.title, payload.description)
+        priority = self.db.scalar(select(Priority).where(Priority.name == priority_name))
+        if priority is None:
+            priority = self.db.scalar(select(Priority).where(Priority.name == "Средняя"))
         if status is None or priority is None or priority.sla_hours <= 0:
-            raise HTTPException(503, "Не настроены статус или стандартный приоритет")
+            raise HTTPException(503, "Не настроены статус или приоритет")
         now = datetime.now(UTC).replace(
             tzinfo=None
         )  # Existing DB columns store UTC without timezone.
