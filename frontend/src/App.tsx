@@ -64,8 +64,9 @@ export default function App() {
         api("/statuses") as Promise<StatusItem[]>,
         api("/auth/me") as Promise<CurrentUser>
       ]);
-      setPage(requests); setCategories(cats); setAvailableStatuses(statusList);
-      setWorkflowStatus(current => statusList.some(s => s.name === current) ? current : (statusList[0]?.name || "Новая"));
+      const processingStatuses = statusList.filter(s => s.name !== "Новая");
+      setPage(requests); setCategories(cats); setAvailableStatuses(processingStatuses);
+      setWorkflowStatus(current => processingStatuses.some(s => s.name === current) ? current : (processingStatuses[0]?.name || "Готово"));
       setCurrentUser(me); setEmail(me.email);
     } catch(e) { setError(e instanceof Error ? e.message : "Не удалось загрузить данные"); }
     finally { setLoading(false); }
