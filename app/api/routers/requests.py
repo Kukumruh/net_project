@@ -1,10 +1,12 @@
+from datetime import date, timedelta
+
 from fastapi import APIRouter, Depends, Query, Response, HTTPException
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.api.dependencies import current_user
 from app.database import get_db
-from app.models import Category, RequestComment, Status, User
+from app.models import Category, Request, RequestComment, Status, User
 from app.schemas.request import (
     CategoryOut,
     RequestCreate,
@@ -122,3 +124,58 @@ def statuses(db: Session = Depends(get_db), user: User = Depends(current_user)):
         for item in configured.values():
             db.refresh(item)
     return [{"id": item.id, "name": item.name, "sort_order": item.sort_order} for item in sorted(configured.values(), key=lambda row: (row.sort_order, row.name))]
+
+
+@router.get("/analytics")
+def analytics(
+    db: Session = Depends(get_db),
+    user: User = Depends(current_user),
+):
+    """Return request analytics scoped to the authenticated user's permissions."""
+    scope = []
+    if user.role.name not in {"Оператор", "Администратор"}:
+        scope.append(Request.applicant_id == user.id)
+
+    status_rows = db.execute(
+        select(Status.name, func.count(Request.id))
+        .join(Request, Request.status_id == Status.id)
+        .where(*scope)
+        .group_by(Status.id, Status.name, Status.sort_order)
+        .order_by(Status.sort_order, Status.name)
+    ).all()
+    statuses_data = [
+        {"status": name, "count": int(count)}
+        for name, count in status_rows
+    ]
+
+    first_day = date.today() - timedelta(days=6)
+    daily_rows = db.execute(
+        select(func.date(Request.created_at), func.count(Request.id))
+        .where(*scope, func.date(Request.created_at) >= first_day)
+        .group_by(func.date(Request.created_at))
+        .order_by(func.date(Request.created_at))
+    ).all()
+    daily_counts = {day.isoformat(): int(count) for day, count in daily_rows if day}
+    daily_data = [
+        {
+            "date": (first_day + timedelta(days=offset)).isoformat(),
+            "count": daily_counts.get(
+                (first_day + timedelta(days=offset)).isoformat(), 0
+            ),
+        }
+        for offset in range(7)
+    ]
+
+    total = sum(item["count"] for item in statuses_data)
+    completed = sum(
+        item["count"]
+        for item in statuses_data
+        if any(word in item["status"].casefold() for word in ("готово", "реш", "закры", "done", "complete"))
+    )
+    return {
+        "total": total,
+        "completed": completed,
+        "statuses": statuses_data,
+        "daily": daily_data,
+    }
+
