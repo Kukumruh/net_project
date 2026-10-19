@@ -129,11 +129,16 @@ export default function App() {
     finally {setWorkflowBusy(false);}
   };
   const isStaff = currentUser?.role === "Оператор" || currentUser?.role === "Администратор";
+  // KPI values come from the role-scoped analytics endpoint, not just the
+  // currently loaded page (which may contain only the first 100 requests).
+  const analyticsCount = (pattern: RegExp) =>
+    analytics?.statuses.filter(item => pattern.test(item.status))
+      .reduce((sum, item) => sum + item.count, 0) ?? 0;
   const stats = [
-    {label:"Всего заявок",value:page?.total ?? "—",icon:Ticket,style:"violet"},
-    {label:"Новые",value:tickets.filter(t=>/нов/i.test(t.status)).length,icon:Clock3,style:"blue"},
-    {label:"В работе",value:tickets.filter(t=>/работ|process/i.test(t.status)).length,icon:Activity,style:"amber"},
-    {label:"Завершено",value:tickets.filter(t=>/реш|закры|done/i.test(t.status)).length,icon:Check,style:"green"}
+    {label:"Всего заявок",value:analytics?.total ?? page?.total ?? "—",icon:Ticket,style:"violet"},
+    {label:"Новые",value:analyticsCount(/нов/i),icon:Clock3,style:"blue"},
+    {label:"В работе",value:analyticsCount(/работ|process|назнач|провер/i),icon:Activity,style:"amber"},
+    {label:"Завершено",value:analytics?.completed ?? 0,icon:Check,style:"green"}
   ];
 
   if(!token) return <div className="login-page"><div className="login-decoration"><div className="orb orb-one"/><div className="orb orb-two"/><div className="login-brand"><div className="brand-mark"><ShieldCheck size={26}/></div><span>SUSU <b>HelpDesk</b></span></div><div className="login-pitch"><span className="eyebrow">СЛУЖБА ПОДДЕРЖКИ</span><h1>Все обращения.<br/>В одном месте.</h1><p>Управляйте заявками, отслеживайте статус и оставайтесь на связи с командой поддержки.</p><div className="login-points"><span><Check size={16}/> Прозрачный статус обращений</span><span><Check size={16}/> История ваших заявок</span><span><Check size={16}/> Быстрое создание обращений</span></div></div><div className="login-foot">SUSU HelpDesk · Личный кабинет</div></div><div className="login-form-side"><form className="login-card" onSubmit={submitLogin}><div className="mobile-brand"><div className="brand-mark"><ShieldCheck size={24}/></div><span>SUSU <b>HelpDesk</b></span></div><span className="eyebrow">С ВОЗВРАЩЕНИЕМ</span><h2>Войти в аккаунт</h2><p className="muted">Введите данные вашей учётной записи</p>{loginError&&<div className="alert"><AlertCircle size={17}/>{loginError}</div>}<label>Email<input type="email" autoComplete="username" required value={email} onChange={e=>setEmail(e.target.value)} placeholder="name@susu.ru"/></label><label>Пароль<input type="password" autoComplete="current-password" required value={password} onChange={e=>setPassword(e.target.value)} placeholder="Введите пароль"/></label><button className="primary full" disabled={loginBusy}>{loginBusy?<RefreshCw className="spin" size={17}/>:<ShieldCheck size={17}/>} {loginBusy?"Входим…":"Войти в систему"}</button><div className="secure-note"><ShieldCheck size={15}/> Защищённое подключение к личному кабинету</div><div className="login-api">API: {API}</div></form></div></div>;
