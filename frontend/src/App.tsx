@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { Activity, AlertCircle, ArrowDownUp, ArrowLeft, Bell, BookOpen, Check, ChevronLeft, ChevronRight, CircleHelp, Clock3, FilePlus2, FileText, Filter, LayoutDashboard, LogOut, Menu, Plus, RefreshCw, Search, Send, ShieldCheck, Ticket, UserRound, X } from "lucide-react";
 
 type Category = { id:number; name:string; description:string|null };
+type StatusItem = { id:number; name:string; sort_order:number };
 type TicketItem = { id:number; title:string; description:string; category_id:number; category:string; status:string; priority:string; responsible_id:number|null; created_at:string; updated_at:string; deadline_at:string|null };
 type Page = {items:TicketItem[]; total:number; limit:number; offset:number};
 type CommentItem = {id:number;author_id:number;comment_text:string;is_internal:boolean;created_at:string};
@@ -23,6 +24,7 @@ export default function App() {
   const [loginError,setLoginError] = useState("");
   const [page,setPage] = useState<Page|null>(null);
   const [categories,setCategories] = useState<Category[]>([]);
+  const [availableStatuses,setAvailableStatuses] = useState<StatusItem[]>([]);
   const [loading,setLoading] = useState(false);
   const [error,setError] = useState("");
   const [query,setQuery] = useState("");
@@ -143,7 +145,7 @@ export default function App() {
           {isStaff&&<section className="panel" style={{marginTop:18}}>
             <div className="panel-title">Обработка заявки</div>
             <form onSubmit={updateWorkflow} className="workflow-form">
-              <label>Новый статус<select value={workflowStatus} onChange={e=>setWorkflowStatus(e.target.value)}><option>Готово</option><option>Отложена</option><option>В работе</option><option>Назначена</option><option>На проверке</option></select></label>
+              <label>Новый статус<select value={workflowStatus} onChange={e=>setWorkflowStatus(e.target.value)}>{availableStatuses.map(s=><option key={s.id} value={s.name}>{s.name}</option>)}</select>{availableStatuses.length===0&&<span className="field-hint">Справочник статусов не загружен. Обновите данные.</span>}</label>
               <label>Пояснение заявителю<textarea required minLength={3} maxLength={5000} rows={3} value={workflowExplanation} onChange={e=>setWorkflowExplanation(e.target.value)} placeholder="Опишите выполненные действия или причину откладывания"/></label>
               <button className="primary" disabled={workflowBusy||workflowExplanation.trim().length<3}>{workflowBusy?<RefreshCw className="spin" size={17}/>:<Check size={17}/>} Сохранить статус и пояснение</button>
             </form>
