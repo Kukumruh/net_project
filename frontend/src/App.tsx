@@ -58,12 +58,15 @@ export default function App() {
     if (!token) return;
     setLoading(true); setError("");
     try {
-      const [requests,cats,me] = await Promise.all([
+      const [requests,cats,statusList,me] = await Promise.all([
         api(`/requests?limit=100&offset=${newOffset}`) as Promise<Page>,
         api("/categories") as Promise<Category[]>,
+        api("/statuses") as Promise<StatusItem[]>,
         api("/auth/me") as Promise<CurrentUser>
       ]);
-      setPage(requests); setCategories(cats); setCurrentUser(me); setEmail(me.email);
+      setPage(requests); setCategories(cats); setAvailableStatuses(statusList);
+      setWorkflowStatus(current => statusList.some(s => s.name === current) ? current : (statusList[0]?.name || "Новая"));
+      setCurrentUser(me); setEmail(me.email);
     } catch(e) { setError(e instanceof Error ? e.message : "Не удалось загрузить данные"); }
     finally { setLoading(false); }
   },[api,token,offset]);
