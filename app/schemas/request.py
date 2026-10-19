@@ -87,3 +87,29 @@ class RequestPage(BaseModel):
     total: int
     limit: int
     offset: int
+
+
+class RequestWorkflowUpdate(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    status: Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=50)]
+    explanation: Annotated[str, StringConstraints(strip_whitespace=True, min_length=3, max_length=5000)]
+
+
+class CommentOut(BaseModel):
+    id: int
+    author_id: int
+    comment_text: str
+    is_internal: bool
+    created_at: datetime
+
+    @field_validator("created_at", mode="after")
+    @classmethod
+    def comment_utc_dates(cls, value):
+        return value.replace(tzinfo=UTC) if value.tzinfo is None else value
+
+
+class CurrentUserOut(BaseModel):
+    id: int
+    full_name: str
+    email: str
+    role: str
