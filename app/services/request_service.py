@@ -61,14 +61,17 @@ class RequestService:
 
     def workflow_update(self, request_id, user, status_name, explanation):
         item = self.get_any(request_id, lock=True)
-        status_aliases = {"Готово": ("Готово", "Решена", "Закрыта"), "Отложена": ("Отложена", "Отклонена")}
-        candidates = status_aliases.get(status_name, (status_name,))
-        status = self.db.scalar(
-            select(Status)
-            .where(Status.name.in_(candidates))
-            .order_by(Status.sort_order.desc())
-            .limit(1)
-        )
+        status = self.db.scalar(select(Status).where(Status.name == status_name))
+        if status is None:
+            status_aliases = {"Готово": ("Решена", "Закрыта"), "Отложена": ("Отклонена",)}
+            candidates = status_aliases.get(status_name, ())
+            if candidates:
+                status = self.db.scalar(
+                    select(Status)
+                    .where(Status.name.in_(candidates))
+                    .order_by(Status.sort_order.desc())
+                    .limit(1)
+                )
         if status is None:
             # Repair stale dictionaries in existing databases. Older installations may
             # not have statuses introduced after their initial seed.
