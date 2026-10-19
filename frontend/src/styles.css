@@ -17,3 +17,105 @@ thead{background:rgba(243,245,255,.72)}td{border-color:rgba(224,229,244,.62)}tbo
 .login-page{background:transparent;gap:24px;padding:24px}.login-decoration{border:1px solid rgba(255,255,255,.45);border-radius:30px;background:linear-gradient(145deg,rgba(40,34,100,.94),rgba(86,75,190,.88) 58%,rgba(122,109,244,.84));box-shadow:0 22px 65px rgba(46,47,112,.2)}.login-form-side{border:1px solid rgba(255,255,255,.72);border-radius:30px;background:rgba(255,255,255,.34);backdrop-filter:blur(24px)}
 @media(max-width:850px){.login-page{grid-template-columns:1fr;padding:0}.login-form-side{border:0;border-radius:0;min-height:100vh;background:transparent}.login-card{padding:28px 24px}.workflow-form{grid-template-columns:1fr}.sidebar{background:rgba(246,247,255,.92)}.topbar{background:rgba(255,255,255,.7)}}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
+
+
+/* Dark Liquid Glass theme */
+:root {
+  color-scheme: dark;
+  --ink: #eef0ff;
+  --muted: #a0a8c4;
+  --line: rgba(180, 190, 235, .16);
+  --purple: #9a8cff;
+  font-family: 'DM Sans', sans-serif;
+  color: var(--ink);
+  background: #090b14;
+}
+html, body, #root { min-height: 100%; background: #090b14; color: var(--ink); }
+body {
+  background:
+    radial-gradient(ellipse at 12% 4%, rgba(104, 82, 226, .24), transparent 36%),
+    radial-gradient(ellipse at 92% 22%, rgba(40, 130, 190, .13), transparent 34%),
+    linear-gradient(135deg, #090b14 0%, #111426 52%, #0a0d18 100%);
+  background-attachment: fixed;
+}
+.app-shell { color: var(--ink); background: transparent; }
+.sidebar, .topbar, .stat-card, .panel, .modal-card, .login-form-side, .login-card {
+  color: var(--ink);
+  background: rgba(20, 24, 43, .72);
+  border-color: rgba(183, 192, 239, .16);
+  box-shadow: 0 18px 55px rgba(0, 0, 0, .22), inset 0 1px 0 rgba(255,255,255,.045);
+  backdrop-filter: blur(24px) saturate(145%);
+  -webkit-backdrop-filter: blur(24px) saturate(145%);
+}
+.sidebar { background: rgba(13, 16, 30, .84); }
+.topbar { background: rgba(14, 17, 31, .68); }
+.main-area { background: transparent; }
+.side-brand, .mobile-brand, .breadcrumbs b, .page-heading h1, .requests-head h2,
+.panel-title, .ticket-cell strong, .table-state strong, .info-grid strong,
+.timeline strong, .modal-head h2, .login-card h2, .stat-bottom strong {
+  color: #f1f2ff;
+}
+.side-caption, .muted, .user-meta span, .breadcrumbs, .connection, .stat-label,
+.stat-note, .footer, .bottom-note, .field-hint, .login-api, .secure-note,
+.info-grid span, .timeline span, .table-footer { color: #a0a8c4; }
+.nav-item { color: #b0b7d2; }
+.nav-item:hover, .nav-item.active { color: #c0b6ff; background: rgba(137, 119, 255, .14); }
+.nav-count, .brand-mark, .user-avatar, .top-avatar, .ticket-icon, .empty-icon {
+  color: #c1b7ff; background: rgba(137, 119, 255, .17);
+}
+.icon-btn { color: #aab2d0; }
+.icon-btn:hover { background: rgba(137, 119, 255, .16); color: #d1caff; }
+.primary {
+  color: #fff;
+  border-color: #8775ff;
+  background: linear-gradient(135deg, #7663f1, #5a49cf);
+  box-shadow: 0 8px 25px rgba(105, 84, 240, .25);
+}
+.primary:hover:not(:disabled) { background: linear-gradient(135deg, #8c7cff, #6856df); }
+.secondary {
+  color: #d9def8; background: rgba(255,255,255,.045);
+  border-color: rgba(180,190,235,.2);
+}
+.secondary:hover { color: #d1caff; border-color: rgba(154,140,255,.6); background: rgba(137,119,255,.1); }
+.search-box, .filter-box, .pagination .icon-btn { border-color: rgba(180,190,235,.19); background: rgba(255,255,255,.035); }
+.search-box input, .filter-box select { color: #eef0ff; }
+.search-box input::placeholder, input::placeholder, textarea::placeholder { color: #7f89aa; }
+thead { background: rgba(255,255,255,.035); }
+th { color: #aab2d0; border-color: rgba(180,190,235,.13); }
+td { color: #b0b8d4; border-color: rgba(180,190,235,.11); }
+tbody tr:hover { background: rgba(137,119,255,.075); }
+.category-label { color: #c2c8e4; background: rgba(180,190,235,.1); }
+.priority-label { color: #d4daf2; }
+.status-pill.new { color: #d0c9ff; background: rgba(125,105,255,.2); }
+.status-pill.progress { color: #ffd891; background: rgba(214,157,57,.16); }
+.status-pill.done { color: #8ce5bd; background: rgba(49,185,129,.15); }
+.status-pill.neutral { color: #c0c7df; background: rgba(180,190,235,.12); }
+.detail-divider, .footer, .sidebar-bottom, .modal-actions { border-color: rgba(180,190,235,.14); }
+.description-text { color: #c0c7e0; }
+.timeline-mark { background: rgba(49,185,129,.16); color: #8ce5bd; }
+.muted-mark { background: rgba(137,119,255,.17); color: #c2b8ff; }
+.tip-box { color: #c1b8ff; background: rgba(137,119,255,.11); }
+.modal-backdrop { background: rgba(2, 4, 12, .76); backdrop-filter: blur(10px); }
+.modal-card input, .modal-card select, .modal-card textarea, .login-card input,
+.workflow-form select, .workflow-form textarea {
+  color: #eef0ff;
+  background: rgba(7, 10, 22, .68);
+  border-color: rgba(180,190,235,.22);
+}
+.modal-card input:focus, .modal-card select:focus, .modal-card textarea:focus,
+.login-card input:focus, .workflow-form select:focus, .workflow-form textarea:focus {
+  border-color: #9a8cff; box-shadow: 0 0 0 3px rgba(154,140,255,.15);
+}
+select option { color: #eef0ff; background: #171b30; }
+.alert { color: #ffb8c2; background: rgba(190, 58, 84, .14); border-color: rgba(255, 120, 145, .25); }
+.toast { color: #9bf0c8; background: rgba(18, 61, 49, .92); border-color: rgba(95, 225, 171, .28); box-shadow: 0 14px 45px rgba(0,0,0,.35); }
+.login-page { background: #090b14; }
+.login-decoration { background: linear-gradient(145deg, #11152b, #28215b 55%, #4537a3); }
+.login-form-side { background: rgba(11, 14, 26, .72); }
+.login-pitch p { color: #d2d5ef; }
+.login-points { color: #f1f0ff; }
+.scrim { background: rgba(1, 3, 10, .72); }
+@media (prefers-reduced-motion: no-preference) {
+  .panel, .stat-card, .sidebar, .topbar, .modal-card { transition: background .2s ease, border-color .2s ease, box-shadow .2s ease; }
+  .panel:hover, .stat-card:hover { border-color: rgba(154,140,255,.3); box-shadow: 0 22px 60px rgba(0,0,0,.28), inset 0 1px 0 rgba(255,255,255,.06); }
+}
