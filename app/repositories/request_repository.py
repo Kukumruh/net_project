@@ -39,3 +39,22 @@ class RequestRepository:
             .offset(offset)
         ).all()
         return items, total
+
+
+    def all_query(self):
+        return select(Request).options(
+            joinedload(Request.category), joinedload(Request.status), joinedload(Request.priority)
+        )
+
+    def get_any(self, request_id, lock=False):
+        query = self.all_query().where(Request.id == request_id)
+        if lock:
+            query = query.with_for_update(of=Request)
+        return self.db.scalar(query)
+
+    def list_all(self, limit, offset):
+        total = self.db.scalar(select(func.count()).select_from(Request)) or 0
+        items = self.db.scalars(self.all_query().order_by(
+            Request.created_at.desc(), Request.id.desc()
+        ).limit(limit).offset(offset)).all()
+        return items, total
