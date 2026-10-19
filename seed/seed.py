@@ -134,6 +134,14 @@ STATUSES = [
         "name": "Закрыта",
         "sort_order": 7,
     },
+    {
+        "name": "Готово",
+        "sort_order": 8,
+    },
+    {
+        "name": "Отложена",
+        "sort_order": 9,
+    },
 ]
 
 
