@@ -119,3 +119,44 @@ select option { color: #eef0ff; background: #171b30; }
   .panel, .stat-card, .sidebar, .topbar, .modal-card { transition: background .2s ease, border-color .2s ease, box-shadow .2s ease; }
   .panel:hover, .stat-card:hover { border-color: rgba(154,140,255,.3); box-shadow: 0 22px 60px rgba(0,0,0,.28), inset 0 1px 0 rgba(255,255,255,.06); }
 }
+
+/* Keep text fields dark while typing, focused, or browser-autofilled. */
+.modal-card input,
+.modal-card select,
+.modal-card textarea,
+.login-card input,
+.workflow-form input,
+.workflow-form select,
+.workflow-form textarea,
+.search-box input,
+.filter-box select {
+  color: #eef0ff;
+  caret-color: #b9adff;
+}
+
+.modal-card input:focus,
+.modal-card select:focus,
+.modal-card textarea:focus,
+.login-card input:focus,
+.workflow-form input:focus,
+.workflow-form select:focus,
+.workflow-form textarea:focus,
+.search-box input:focus,
+.filter-box select:focus {
+  background-color: rgba(7, 10, 22, .88);
+  outline: none;
+  box-shadow: none;
+}
+
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+textarea:-webkit-autofill,
+select:-webkit-autofill {
+  -webkit-text-fill-color: #eef0ff;
+  caret-color: #b9adff;
+  -webkit-box-shadow: 0 0 0 1000px #0b0e1a inset;
+  box-shadow: 0 0 0 1000px #0b0e1a inset;
+  transition: background-color 99999s ease-out 0s;
+}
+
