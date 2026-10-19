@@ -7,6 +7,7 @@ type TicketItem = { id:number; title:string; description:string; category_id:num
 type Page = {items:TicketItem[]; total:number; limit:number; offset:number};
 type CommentItem = {id:number;author_id:number;comment_text:string;is_internal:boolean;created_at:string};
 type CurrentUser = {id:number;full_name:string;email:string;role:string};
+type AnalyticsData = {total:number;completed:number;statuses:{status:string;count:number}[];daily:{date:string;count:number}[]};
 const API = (import.meta.env.VITE_API_URL || "http://localhost:8000/api/v1").replace(/\/$/, "");
 const date = (value?:string|null) => value ? new Date(value).toLocaleDateString("ru-RU",{day:"2-digit",month:"short",year:"numeric"}) : "—";
 const statusClass = (s:string) => /нов/i.test(s) ? "new" : /работ|process|отлож/i.test(s) ? "progress" : /реш|закры|готово|done/i.test(s) ? "done" : "neutral";
@@ -23,6 +24,7 @@ export default function App() {
   const [loginBusy,setLoginBusy] = useState(false);
   const [loginError,setLoginError] = useState("");
   const [page,setPage] = useState<Page|null>(null);
+  const [analytics,setAnalytics] = useState<AnalyticsData|null>(null);
   const [categories,setCategories] = useState<Category[]>([]);
   const [availableStatuses,setAvailableStatuses] = useState<StatusItem[]>([]);
   const [loading,setLoading] = useState(false);
@@ -58,14 +60,15 @@ export default function App() {
     if (!token) return;
     setLoading(true); setError("");
     try {
-      const [requests,cats,statusList,me] = await Promise.all([
+      const [requests,cats,statusList,me,analyticsData] = await Promise.all([
         api(`/requests?limit=100&offset=${newOffset}`) as Promise<Page>,
         api("/categories") as Promise<Category[]>,
         api("/statuses") as Promise<StatusItem[]>,
-        api("/auth/me") as Promise<CurrentUser>
+        api("/auth/me") as Promise<CurrentUser>,
+        api("/analytics") as Promise<AnalyticsData>
       ]);
       const processingStatuses = statusList.filter(s => s.name !== "Новая");
-      setPage(requests); setCategories(cats); setAvailableStatuses(processingStatuses);
+      setPage(requests); setCategories(cats); setAvailableStatuses(processingStatuses); setAnalytics(analyticsData);
       setWorkflowStatus(current => processingStatuses.some(s => s.name === current) ? current : (processingStatuses[0]?.name || "Готово"));
       setCurrentUser(me); setEmail(me.email);
     } catch(e) { setError(e instanceof Error ? e.message : "Не удалось загрузить данные"); }
@@ -157,6 +160,16 @@ export default function App() {
         </> :
         <><div className="page-heading"><div><span className="eyebrow">ПАНЕЛЬ УПРАВЛЕНИЯ</span><h1>{active==="overview"?"Добро пожаловать!":isStaff?"Все заявки":"Мои заявки"}</h1><p className="muted">{isStaff?"Общий список заявок. Откройте обращение, чтобы изменить статус и добавить пояснение.":active==="overview"?"Следите за обращениями и быстро находите нужную информацию.":"Просматривайте обращения и управляйте новыми заявками."}</p></div><button className="primary" onClick={openCreate}><Plus size={18}/> Создать заявку</button></div>
         {active==="overview"&&<div className="stats-grid">{stats.map(s=><div className="stat-card" key={s.label}><div className={`stat-icon ${s.style}`}><s.icon size={20}/></div><div className="stat-label">{s.label}</div><div className="stat-bottom"><strong>{s.value}</strong><span className="stat-note">{s.label==="Всего заявок"?"За всё время":"В загруженном списке"}</span></div></div>)}</div>}
+        {active==="overview"&&analytics&&<div className="analytics-grid">
+          <section className="panel analytics-panel">
+            <div className="analytics-heading"><div><span className="eyebrow">АНАЛИТИКА</span><h2>Заявки по статусам</h2><p className="muted">Текущее распределение обращений</p></div><div className="analytics-total"><strong>{analytics.total}</strong><span>всего</span></div></div>
+            {analytics.statuses.length===0?<div className="analytics-empty">Пока нет данных для анализа</div>:<div className="status-chart">{analytics.statuses.map(item=><div className="status-chart-row" key={item.status}><div className="status-chart-label" title={item.status}>{item.status}</div><div className="status-chart-track"><div className={`status-chart-bar ${statusClass(item.status)}`} style={{width:`${analytics.total?Math.max(2,item.count/analytics.total*100):0}%`}}/></div><strong>{item.count}</strong></div>)}</div>}
+          </section>
+          <section className="panel analytics-panel">
+            <div className="analytics-heading"><div><span className="eyebrow">ПОСЛЕДНИЕ 7 ДНЕЙ</span><h2>Динамика обращений</h2><p className="muted">Количество созданных заявок по дням</p></div></div>
+            <div className="daily-chart">{analytics.daily.map(day=><div className="daily-chart-column" key={day.date} title={`${date(day.date)}: ${day.count} заявок`}><strong>{day.count}</strong><div className="daily-chart-track"><div className="daily-chart-bar" style={{height:`${Math.max(day.count>0?8:2,day.count/Math.max(1,...analytics.daily.map(d=>d.count))*100)}%`}}/></div><span>{new Date(`${day.date}T12:00:00`).toLocaleDateString("ru-RU",{day:"2-digit",month:"short"})}</span></div>)}</div>
+          </section>
+        </div>}
         <section className="panel requests-panel"><div className="requests-head"><div><h2>{active==="overview"?"Последние обращения":"Все обращения"}</h2><p className="muted">{page?.total??0} {isStaff?"заявок в системе":"заявок в вашем аккаунте"}</p></div><button className="secondary" onClick={()=>{setActive("requests");void load(offset);}}><ArrowDownUp size={16}/> Все заявки</button></div><div className="table-tools"><div className="search-box"><Search size={17}/><input placeholder="Поиск по заявкам…" value={query} onChange={e=>setQuery(e.target.value)}/>{query&&<button className="icon-btn" onClick={()=>setQuery("")}><X size={15}/></button>}</div><div className="filter-box"><Filter size={16}/><select value={statusFilter} onChange={e=>setStatusFilter(e.target.value)}>{statuses.map(s=><option key={s}>{s}</option>)}</select></div></div>
         <div className="table-wrap"><table><thead><tr><th>Заявка</th><th>Категория</th><th>Статус</th><th>Приоритет</th><th>Создана</th><th></th></tr></thead><tbody>{loading&&tickets.length===0?<tr><td colSpan={6}><div className="table-state"><RefreshCw className="spin" size={21}/> Загружаем заявки…</div></td></tr>:filtered.length===0?<tr><td colSpan={6}><div className="table-state"><div className="empty-icon"><FileText size={24}/></div><strong>{query||statusFilter!=="Все статусы"?"Ничего не найдено":"Пока нет заявок"}</strong><span>{query||statusFilter!=="Все статусы"?"Попробуйте изменить параметры поиска.":"Создайте первую заявку, чтобы обратиться в поддержку."}</span>{!query&&statusFilter==="Все статусы"&&<button className="primary" onClick={openCreate}><Plus size={16}/> Создать заявку</button>}</div></td></tr>:filtered.slice(active==="overview"?0:undefined,active==="overview"?5:undefined).map(t=><tr key={t.id} onClick={()=>void selectTicket(t)}><td><div className="ticket-cell"><span className="ticket-icon"><FileText size={17}/></span><div><strong>{t.title}</strong><span>#{t.id} · Обновлено {date(t.updated_at)}</span></div></div></td><td><span className="category-label">{t.category}</span></td><td><span className={`status-pill ${statusClass(t.status)}`}><i/> {t.status}</span></td><td><span className="priority-label">{t.priority}</span></td><td>{date(t.created_at)}</td><td><button className="icon-btn row-arrow" title="Открыть заявку" onClick={e=>{e.stopPropagation();void selectTicket(t);}}><ChevronRight size={18}/></button></td></tr>)}</tbody></table></div><div className="table-footer"><span>Показано {filtered.length?Math.min(filtered.length,active==="overview"?5:filtered.length):0} из {page?.total??0}</span><div className="pagination"><button className="icon-btn" disabled={offset===0||loading} onClick={()=>setOffset(Math.max(0,offset-100))}><ChevronLeft size={17}/></button><span>Страница {Math.floor(offset/100)+1}</span><button className="icon-btn" disabled={!page||offset+page.limit>=page.total||loading} onClick={()=>setOffset(offset+100)}><ChevronRight size={17}/></button></div></div></section>
         <div className="bottom-note"><ShieldCheck size={17}/><span>{isStaff?"Данные заявок доступны сотрудникам поддержки в соответствии с ролью.":"Ваши обращения доступны только вам. Персональные данные защищены."}</span><span className="bottom-spacer"/><button onClick={()=>void load(offset)}><RefreshCw size={14}/> Обновить</button></div></>}
