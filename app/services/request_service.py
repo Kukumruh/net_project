@@ -63,7 +63,12 @@ class RequestService:
         item = self.get_any(request_id, lock=True)
         status = self.db.scalar(select(Status).where(Status.name == status_name))
         if status is None:
-            raise HTTPException(503, "Статус не настроен. Обновите справочники.")
+            # Repair stale dictionaries in existing databases. Older installations may
+            # not have statuses introduced after their initial seed.
+            max_order = self.db.scalar(select(Status.sort_order).order_by(Status.sort_order.desc()).limit(1))
+            status = Status(name=status_name, sort_order=(max_order or 0) + 1)
+            self.db.add(status)
+            self.db.flush()
         now = datetime.now(UTC).replace(tzinfo=None)
         item.status_id = status.id
         item.updated_at = now
