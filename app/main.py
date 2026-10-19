@@ -6,7 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from sqlalchemy.exc import SQLAlchemyError
 
-from app.api.routers import auth, requests
+from app.api.routers import auth, requests, users
 from app.security import get_secret
 
 
@@ -36,6 +36,7 @@ app.add_middleware(
 
 app.include_router(auth.router, prefix="/api/v1")
 app.include_router(requests.router, prefix="/api/v1")
+app.include_router(users.router, prefix="/api/v1")
 
 
 @app.exception_handler(SQLAlchemyError)
